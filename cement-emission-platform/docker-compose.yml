@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cement
+      POSTGRES_PASSWORD: cement123
+      POSTGRES_DB: cement_emission
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cement -d cement_emission"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "5432:5432"
+
+  server:
+    build: ./server
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: cement
+      PGPASSWORD: cement123
+      PGDATABASE: cement_emission
+      PORT: 3000
+      SIMULATOR_ENABLED: "true"
+      SIMULATOR_INTERVAL_MS: 10000
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  web:
+    build: ./web
+    depends_on:
+      - server
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:
