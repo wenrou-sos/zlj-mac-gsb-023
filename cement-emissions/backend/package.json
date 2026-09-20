@@ -1,0 +1,26 @@
+{
+  "name": "cement-emissions-backend",
+  "version": "1.0.0",
+  "description": "水泥生产排放监测平台 - API 服务",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "simulate": "SIMULATION_ENABLED=true node src/server.js",
+    "pg:start": "node scripts/pg-local.mjs start",
+    "pg:fresh": "node scripts/pg-local.mjs start --fresh",
+    "pg:stop": "node scripts/pg-local.mjs stop",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "node tests/smoke/run-smoke.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "embedded-postgres": "17.10.0-beta.17",
+    "supertest": "^7.0.0",
+    "vitest": "^2.1.8"
+  }
+}

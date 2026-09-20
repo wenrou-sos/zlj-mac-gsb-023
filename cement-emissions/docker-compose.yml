@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cement-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cement}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cement123}
+      POSTGRES_DB: ${POSTGRES_DB:-cement_emissions}
+      TZ: Asia/Shanghai
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cement} -d ${POSTGRES_DB:-cement_emissions}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: cement-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgres://${POSTGRES_USER:-cement}:${POSTGRES_PASSWORD:-cement123}@postgres:5432/${POSTGRES_DB:-cement_emissions}
+      SEED_ON_START: "true"
+      # 打开后后端会持续模拟 CEMS 上报（每 5 秒）
+      SIMULATION_ENABLED: ${SIMULATION_ENABLED:-true}
+      SIMULATION_INTERVAL_MS: ${SIMULATION_INTERVAL_MS:-5000}
+      ALARM_MERGE_WINDOW_MS: ${ALARM_MERGE_WINDOW_MS:-600000}
+      TZ: Asia/Shanghai
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: cement-frontend
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
